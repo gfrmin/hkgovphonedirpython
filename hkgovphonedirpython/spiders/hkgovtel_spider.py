@@ -12,15 +12,16 @@ class HkTelDirSpider(scrapy.Spider):
     start_urls = ["http://tel.directory.gov.hk/index_ENG.html?accept_disclaimer=yes"]
     
     def parse(self, response):
-        for href in response.css("#tbl_dept_list a::attr(href)").extract():
+        departments = response.css("#tbl_dept_list a::text").extract()
+        for idhref, href in enumerate(response.css("#tbl_dept_list a::attr(href)").extract()):
             url = response.urljoin(href)
-            yield scrapy.Request(url, callback=self.parsepage)
+            yield scrapy.Request(url, callback=self.parsepage, meta={'department' : departments[idhref]})
 
     def parsepage(self, response):
+        department = response.meta['department']
         if hasphonetable(response):
             h1rowtdnodes = response.css(".row td, h1").extract()
             phonetablec = []
-            department = ""
             for node in h1rowtdnodes:
                 if node[0:4] == "<h1>":
                     for idx, val in enumerate(phonetablec):
@@ -39,7 +40,7 @@ class HkTelDirSpider(scrapy.Spider):
                             tobepassed = [val]
                         else:
                             tobepassed += [val]
-                    department = node
+                    department = department + "<br>" + node
                     phonetablec = []
                 else:
                     phonetablec = phonetablec + [node]
@@ -76,6 +77,9 @@ class HkTelDirSpider(scrapy.Spider):
         somelinks = response.css("#tbl_dept_list a::attr(href)").extract()
         morelinks = response.css("#dept_list_lv2_outline a::attr(href)").extract()
         links = somelinks + morelinks
-        for link in links:
+        somelinkstext = response.css("#tbl_dept_list a::text").extract()
+        morelinkstext = response.css("#dept_list_lv2_outline a::text").extract()
+        linkstext = somelinkstext + morelinkstext
+        for idlink, link in enumerate(links):
             url = response.urljoin(link)
-            yield scrapy.Request(url, callback=self.parsepage)
+            yield scrapy.Request(url, callback=self.parsepage, meta={'department' : department + "<br>" + linkstext[idlink]})
