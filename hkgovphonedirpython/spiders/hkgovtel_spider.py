@@ -15,12 +15,14 @@ class HkTelDirSpider(scrapy.Spider):
         departments = response.css("#tbl_dept_list a::text").extract()
         for idhref, href in enumerate(response.css("#tbl_dept_list a::attr(href)").extract()):
             url = response.urljoin(href)
-            yield scrapy.Request(url, callback=self.parsepage, meta={'department' : departments[idhref]})
+            yield scrapy.Request(url, callback=self.parsepage)
 
     def parsepage(self, response):
-        department = response.meta['department']
         if hasphonetable(response):
             h1rowtdnodes = response.css(".row td, h1").extract()
+            basedepartment = h1rowtdnodes[0]
+            department = basedepartment
+            h1rowtdnodes = h1rowtdnodes[1:]
             phonetablec = []
             for node in h1rowtdnodes:
                 if node[0:4] == "<h1>":
@@ -40,7 +42,7 @@ class HkTelDirSpider(scrapy.Spider):
                             tobepassed = [val]
                         else:
                             tobepassed += [val]
-                    department = department + "<br>" + node
+                    department = basedepartment + "<br>" + node
                     phonetablec = []
                 else:
                     phonetablec = phonetablec + [node]
@@ -82,4 +84,4 @@ class HkTelDirSpider(scrapy.Spider):
         linkstext = somelinkstext + morelinkstext
         for idlink, link in enumerate(links):
             url = response.urljoin(link)
-            yield scrapy.Request(url, callback=self.parsepage, meta={'department' : department + "<br>" + linkstext[idlink]})
+            yield scrapy.Request(url, callback=self.parsepage)
