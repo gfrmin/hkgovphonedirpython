@@ -61,7 +61,19 @@ class HkTelDirSpider(scrapy.Spider):
                     tobepassed = [val]
                 else:
                     tobepassed += [val]
-                    
+
+            try:
+                item = Govperson()
+                item['name'] = tobepassed[0]
+                item['title'] = tobepassed[1]
+                item['tel'] = tobepassed[2]
+                item['email'] = tobepassed[3]
+                item['department'] = department
+                print "item: ", item
+                yield item
+            except NameError:
+                pass
+            
         somelinks = response.css("#tbl_dept_list a::attr(href)").extract()
         morelinks = response.css("#dept_list_lv2_outline a::attr(href)").extract()
         links = somelinks + morelinks
