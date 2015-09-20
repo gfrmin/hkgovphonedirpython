@@ -4,10 +4,11 @@ library(stringr)
 library(tidyr)
 
 teldir <- data.table(fromJSON("teldir.json"))
-teldir[,department := str_replace_all(department, c("<h1>" = "", "</h1>" = "", "<br>$" = "", "&amp;" = ""))]
-#teldirdeps <- data.table(str_split_fixed(teldir$department, "<br>", 9))
-#setnames(teldirdeps, c("dep1", "dep2", "dep3", "dep4", "dep5", "dep6", "dep7", "dep8", "dep9"))
-#teldir <- cbind(teldir, teldirdeps)
+teldir[,department := str_replace_all(department, c("\r" = "", "\n" = "", "[ ]+" = " "))]
+teldir[,department := str_replace_all(department, c("<h1>" = "", "</h1>" = "", "<br><br>" = "<br>", "<br>$" = "", "&amp;" = ""))]
+teldirdeps <- str_split(teldir$department, "<br>")
+teldirdeps <- sapply(sapply(teldirdeps, unique), str_c, collapse="<br>")
+teldir[,department := teldirdeps]
 teldir[,department := str_replace_all(department, c("<br>" = " - "))]
 teldir[,title := str_replace_all(title, c("<(.*?)>" = "", "&amp;" = ""))]
 teldir[,name := str_replace_all(name, "<(.*?)>", "")]
