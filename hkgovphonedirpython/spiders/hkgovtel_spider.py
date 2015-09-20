@@ -22,7 +22,6 @@ class HkTelDirSpider(scrapy.Spider):
             phonetablec = []
             department = ""
             for node in h1rowtdnodes:
-                print "department:", department
                 if node[0:4] == "<h1>":
                     for idx, val in enumerate(phonetablec):
                         if idx % 4 == 0:
