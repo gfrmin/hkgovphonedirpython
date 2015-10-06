@@ -8,4 +8,11 @@ shinyServer(function(input, output) {
     output$teldir <- renderDataTable({
         teldir
     })
+
+    output$downloadData <- downloadHandler(
+        filename = "teldir.csv",
+        content = function(file) {
+            write.csv(teldir, file)
+        }
+    )
 })
