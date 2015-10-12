@@ -3,7 +3,6 @@ import scrapy
 from hkgovphonedirpython.items import Govperson
 
 def hasphonetable(response):
-    print len(response.css(".row td")), "rows"
     return len(response.css(".row td")) > 0
 
 class HkTelDirSpider(scrapy.Spider):
