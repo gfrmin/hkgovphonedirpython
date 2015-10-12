@@ -90,4 +90,6 @@ class HkTelDirSpider(scrapy.Spider):
         linkstext = somelinkstext + morelinkstext
         for idlink, link in enumerate(links):
             url = response.urljoin(link)
-            yield scrapy.Request(url, callback=self.parsepage)
+            request = scrapy.Request(url, callback=self.parsepage)
+            request.meta['topdepartment'] = response.meta['topdepartment']
+            yield request
