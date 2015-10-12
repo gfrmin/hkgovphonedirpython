@@ -15,3 +15,4 @@ class Govperson(scrapy.Item):
     tel = scrapy.Field()
     email = scrapy.Field()
     department = scrapy.Field()
+    topdepartment = scrapy.Field()
