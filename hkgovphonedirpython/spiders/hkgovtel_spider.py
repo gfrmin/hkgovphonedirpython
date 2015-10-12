@@ -21,6 +21,7 @@ class HkTelDirSpider(scrapy.Spider):
         if hasphonetable(response):
             h1rowtdnodes = response.css(".row td, h1").extract()
             basedepartment = h1rowtdnodes[0]
+            topdepartment = h1rowtdnodes[0]
             department = basedepartment
             h1rowtdnodes = h1rowtdnodes[1:]
             phonetablec = []
@@ -35,6 +36,7 @@ class HkTelDirSpider(scrapy.Spider):
                                 item['tel'] = tobepassed[2]
                                 item['email'] = tobepassed[3]
                                 item['department'] = department
+                                item['topdepartment'] = topdepartment
                                 print "item: ", item
                                 yield item
                             except NameError:
@@ -56,6 +58,7 @@ class HkTelDirSpider(scrapy.Spider):
                         item['tel'] = tobepassed[2]
                         item['email'] = tobepassed[3]
                         item['department'] = department
+                        item['topdepartment'] = topdepartment
                         print "item: ", item
                         yield item
                     except NameError:
@@ -71,6 +74,7 @@ class HkTelDirSpider(scrapy.Spider):
                 item['tel'] = tobepassed[2]
                 item['email'] = tobepassed[3]
                 item['department'] = department
+                item['topdepartment'] = topdepartment
                 print "item: ", item
                 yield item
             except NameError:
