@@ -4,3 +4,4 @@
 *.json
 /.Rhistory
 *.bts
+/teldir.json.backup
