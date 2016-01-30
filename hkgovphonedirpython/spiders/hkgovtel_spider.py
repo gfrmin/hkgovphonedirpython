@@ -1,4 +1,5 @@
 import scrapy
+import re
 
 from hkgovphonedirpython.items import Govperson
 
@@ -7,11 +8,11 @@ def hasphonetable(response):
 
 class HkTelDirSpider(scrapy.Spider):
     name = "hkgovtel"
-#    allowed_domains = ["http://tel.directory.gov.hk/"]
     start_urls = ["http://tel.directory.gov.hk/index_ENG.html?accept_disclaimer=yes"]
     
     def parse(self, response):
         departments = response.css("#tbl_dept_list a::text").extract()
+        departments = map(lambda x: re.sub('\s+', ' ', x.strip().replace('\n', '').replace('\r', '')), departments)
         for idhref, href in enumerate(response.css("#tbl_dept_list a::attr(href)").extract()):
             url = response.urljoin(href)
             request = scrapy.Request(url, callback=self.parsepage)
@@ -20,66 +21,26 @@ class HkTelDirSpider(scrapy.Spider):
 
     def parsepage(self, response):
         if hasphonetable(response):
-            h1rowtdnodes = response.css(".row td, h1").extract()
-            basedepartment = h1rowtdnodes[0]
+            h1rownodes = response.css(".row, h1")
+            basedepartment = " - ".join(h1rownodes[0].css("::text").extract())
             topdepartment = response.meta['topdepartment']
             department = basedepartment
-            h1rowtdnodes = h1rowtdnodes[1:]
-            phonetablec = []
-            for node in h1rowtdnodes:
-                if node[0:4] == "<h1>":
-                    for idx, val in enumerate(phonetablec):
-                        if idx % 4 == 0:
-                            try:
-                                item = Govperson()
-                                item['name'] = tobepassed[0]
-                                item['title'] = tobepassed[1]
-                                item['tel'] = tobepassed[2]
-                                item['email'] = tobepassed[3]
-                                item['department'] = department
-                                item['topdepartment'] = topdepartment
-                                print "item: ", item
-                                yield item
-                            except NameError:
-                                pass
-                            tobepassed = [val]
-                        else:
-                            tobepassed += [val]
-                    department = basedepartment + "<br>" + node
-                    phonetablec = []
+            h1rownodes = h1rownodes[1:]
+            for h1row in h1rownodes:
+                if h1row.extract()[0:4] == "<h1>":                    
+                    department = " - ".join([basedepartment, " - ".join(h1row.css("::text").extract()[1:])])
                 else:
-                    phonetablec = phonetablec + [node]
-                    
-            for idx, val in enumerate(phonetablec):
-                if idx % 4 == 0:
-                    try:
-                        item = Govperson()
-                        item['name'] = tobepassed[0]
-                        item['title'] = tobepassed[1]
-                        item['tel'] = tobepassed[2]
-                        item['email'] = tobepassed[3]
-                        item['department'] = department
-                        item['topdepartment'] = topdepartment
-                        print "item: ", item
-                        yield item
-                    except NameError:
-                        pass
-                    tobepassed = [val]
-                else:
-                    tobepassed += [val]
-
-            try:
-                item = Govperson()
-                item['name'] = tobepassed[0]
-                item['title'] = tobepassed[1]
-                item['tel'] = tobepassed[2]
-                item['email'] = tobepassed[3]
-                item['department'] = department
-                item['topdepartment'] = topdepartment
-                print "item: ", item
-                yield item
-            except NameError:
-                pass
+                    rowdetails = map(lambda td: td.css("::text").extract(), h1row.css("td")) 
+                    item = Govperson()
+                    item['name'] = rowdetails[0][0]
+                    item['title'] = rowdetails[1][0]
+                    if rowdetails[2] != []:
+                        item['tel'] = rowdetails[2][0]
+                    if rowdetails[3] != []:
+                        item['email'] = "@".join(re.findall(r"= \'(.*?)\';", rowdetails[3][0]))
+                    item['department'] = department
+                    item['topdepartment'] = topdepartment
+                    yield item
             
         somelinks = response.css("#tbl_dept_list a::attr(href)").extract()
         morelinks = response.css("#dept_list_lv2_outline a::attr(href)").extract()
